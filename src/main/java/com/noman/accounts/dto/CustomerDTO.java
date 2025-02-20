@@ -3,7 +3,7 @@ package com.noman.accounts.dto;
 import lombok.Data;
 
 @Data
-public class CutomerDTO {
+public class CustomerDTO {
     private String name;
     private String email;
     private String mobileNumber;
