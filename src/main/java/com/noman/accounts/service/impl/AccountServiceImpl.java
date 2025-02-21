@@ -4,6 +4,7 @@ import com.noman.accounts.constants.AccountsConstants;
 import com.noman.accounts.dto.CustomerDTO;
 import com.noman.accounts.entity.Accounts;
 import com.noman.accounts.entity.Customer;
+import com.noman.accounts.exception.CustomerAlreadyExistsException;
 import com.noman.accounts.mapper.CustomerMapper;
 import com.noman.accounts.repository.AccountsRepository;
 import com.noman.accounts.repository.CustomerRepository;
@@ -25,11 +26,18 @@ public class AccountServiceImpl implements IAccountService {
     @Override
     public void createAccount(CustomerDTO customerDTO) {
         Customer customer = CustomerMapper.mapToCustomer(customerDTO, new Customer());
+        if (customerRepository.findByMobileNumber(customer.getMobileNumber()).isPresent()) {
+            throw new CustomerAlreadyExistsException("Customer already exists with the mobile number: " + customer.getMobileNumber());
+        }
         Customer saveCustomer = customerRepository.save(customer);
-        Accounts saveAccount = accountsRepository.save(createNewAccount(saveCustomer));
-
+        System.out.println(" Mobile :" + saveCustomer.getCustomerId());
+        accountsRepository.save(createNewAccount(saveCustomer));
     }
 
+    /**
+     * @param customer
+     * @return
+     */
     private Accounts createNewAccount(Customer customer) {
         Accounts newAccount = new Accounts();
         newAccount.setCustomerId(customer.getCustomerId());
