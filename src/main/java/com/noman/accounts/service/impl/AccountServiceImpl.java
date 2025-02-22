@@ -1,49 +1,65 @@
 package com.noman.accounts.service.impl;
 
 import com.noman.accounts.constants.AccountsConstants;
+import com.noman.accounts.dto.AccountsDTO;
 import com.noman.accounts.dto.CustomerDTO;
 import com.noman.accounts.entity.Accounts;
 import com.noman.accounts.entity.Customer;
 import com.noman.accounts.exception.CustomerAlreadyExistsException;
+import com.noman.accounts.exception.ResourceNotFoundException;
+import com.noman.accounts.mapper.AccountsMapper;
 import com.noman.accounts.mapper.CustomerMapper;
 import com.noman.accounts.repository.AccountsRepository;
 import com.noman.accounts.repository.CustomerRepository;
 import com.noman.accounts.service.IAccountService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Random;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class AccountServiceImpl implements IAccountService {
     private AccountsRepository accountsRepository;
     private CustomerRepository customerRepository;
 
-    /**
-     * @param customerDTO
-     */
     @Override
     public void createAccount(CustomerDTO customerDTO) {
         Customer customer = CustomerMapper.mapToCustomer(customerDTO, new Customer());
         if (customerRepository.findByMobileNumber(customer.getMobileNumber()).isPresent()) {
             throw new CustomerAlreadyExistsException("Customer already exists with the mobile number: " + customer.getMobileNumber());
         }
+        customer.setCreatedAt(LocalDateTime.now());
+        customer.setCreatedBy(customer.getName());
         Customer saveCustomer = customerRepository.save(customer);
-        System.out.println(" Mobile :" + saveCustomer.getCustomerId());
+
+        log.info(" Mobile Number:{}", saveCustomer.getCustomerId());
         accountsRepository.save(createNewAccount(saveCustomer));
     }
 
-    /**
-     * @param customer
-     * @return
-     */
     private Accounts createNewAccount(Customer customer) {
         Accounts newAccount = new Accounts();
         newAccount.setCustomerId(customer.getCustomerId());
         newAccount.setAccountNumber(String.valueOf(100000L + new Random().nextInt(90000000)));
         newAccount.setAccountType(AccountsConstants.SAVINGS);
         newAccount.setBranchAddress(AccountsConstants.ARDRESS);
+        newAccount.setCreatedAt(LocalDateTime.now());
+        newAccount.setCreatedBy(customer.getName());
         return newAccount;
     }
+
+
+    @Override
+    public CustomerDTO fetchAccount(String mobileNumber) {
+        Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(() -> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber));
+        Accounts account = accountsRepository.findByCustomerId(customer.getCustomerId()).orElseThrow(() -> new ResourceNotFoundException("Account", "account ID", customer.getCustomerId().toString()));
+        CustomerDTO customerDTO = CustomerMapper.mapToCustomerDTO(customer, new CustomerDTO());
+        customerDTO.setAccountsDTO(AccountsMapper.mapToAccountsDTO(account, new AccountsDTO()));
+        return customerDTO;
+    }
+
 }
