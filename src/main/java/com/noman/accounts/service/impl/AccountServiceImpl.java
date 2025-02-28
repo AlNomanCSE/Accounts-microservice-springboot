@@ -36,8 +36,6 @@ public class AccountServiceImpl implements IAccountService {
         customer.setCreatedAt(LocalDateTime.now());
         customer.setCreatedBy(customer.getName());
         Customer saveCustomer = customerRepository.save(customer);
-
-        log.info(" Mobile Number:{}", saveCustomer.getCustomerId());
         accountsRepository.save(createNewAccount(saveCustomer));
     }
 
@@ -60,6 +58,33 @@ public class AccountServiceImpl implements IAccountService {
         CustomerDTO customerDTO = CustomerMapper.mapToCustomerDTO(customer, new CustomerDTO());
         customerDTO.setAccountsDTO(AccountsMapper.mapToAccountsDTO(account, new AccountsDTO()));
         return customerDTO;
+    }
+
+    @Override
+    public boolean updateAccount(CustomerDTO customerDTO) {
+        boolean isUpdated = false;
+        // Find customer by mobile number
+        Customer customer = customerRepository.findByMobileNumber(customerDTO.getMobileNumber())
+                .orElseThrow(() -> new ResourceNotFoundException("Customer", "mobileNumber", customerDTO.getMobileNumber()));
+
+        // Map updated customer details
+        CustomerMapper.mapToCustomer(customerDTO, customer);
+        customer.setUpdatedAt(LocalDateTime.now());
+        customer.setUpdatedBy(customer.getName()); // You might want to get this from a security context in a real app
+        customerRepository.save(customer);
+
+        // Update account details if provided
+        if (customerDTO.getAccountsDTO() != null) {
+            Accounts account = accountsRepository.findByCustomerId(customer.getCustomerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Account", "customerId", customer.getCustomerId().toString()));
+            AccountsMapper.mapToAccounts(customerDTO.getAccountsDTO(), account);
+            account.setUpdatedAt(LocalDateTime.now());
+            account.setUpdatedBy(customer.getName());
+            accountsRepository.save(account);
+            isUpdated = true;
+        }
+
+        return isUpdated || !customerDTO.getAccountsDTO().equals(fetchAccount(customerDTO.getMobileNumber()).getAccountsDTO());
     }
 
 }

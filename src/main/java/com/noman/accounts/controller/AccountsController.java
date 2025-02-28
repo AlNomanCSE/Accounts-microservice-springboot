@@ -15,15 +15,29 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class AccountsController {
     private IAccountService iaccountService;
+
     @PostMapping("/create")
     public ResponseEntity<ResponseDTO> createAccount(@RequestBody CustomerDTO customerDTO) {
         iaccountService.createAccount(customerDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ResponseDTO(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201));
     }
 
     @GetMapping("/fetch")
     public ResponseEntity<CustomerDTO> fetchAccountDetails(@RequestParam String mobileNumber) {
         CustomerDTO customerDTO = iaccountService.fetchAccount(mobileNumber);
         return ResponseEntity.status(HttpStatus.OK).body(customerDTO);
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<ResponseDTO> updateAccount(@RequestBody CustomerDTO customerDTO) {
+        boolean isUpdated = iaccountService.updateAccount(customerDTO);
+        if (isUpdated) {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(new ResponseDTO(AccountsConstants.STATUS_200, AccountsConstants.MESSAGE_200));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+                    .body(new ResponseDTO(AccountsConstants.STATUS_304, AccountsConstants.MESSAGE_304));
+        }
     }
 }
