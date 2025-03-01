@@ -44,7 +44,7 @@ public class AccountServiceImpl implements IAccountService {
         newAccount.setCustomerId(customer.getCustomerId());
         newAccount.setAccountNumber(String.valueOf(100000L + new Random().nextInt(90000000)));
         newAccount.setAccountType(AccountsConstants.SAVINGS);
-        newAccount.setBranchAddress(AccountsConstants.ARDRESS);
+        newAccount.setBranchAddress(AccountsConstants.ADDRESS);
         newAccount.setCreatedAt(LocalDateTime.now());
         newAccount.setCreatedBy(customer.getName());
         return newAccount;
@@ -85,6 +85,16 @@ public class AccountServiceImpl implements IAccountService {
         }
 
         return isUpdated || !customerDTO.getAccountsDTO().equals(fetchAccount(customerDTO.getMobileNumber()).getAccountsDTO());
+    }
+
+    @Override
+    public boolean deleteAccount(String mobileNumber) {
+        Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(() -> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber));
+        //    firsts delete account details
+        accountsRepository.deleteByCustomerId(customer.getCustomerId());
+        //    second delete customer details
+        customerRepository.deleteById(customer.getCustomerId());
+        return true;
     }
 
 }

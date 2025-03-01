@@ -40,4 +40,14 @@ public class AccountsController {
                     .body(new ResponseDTO(AccountsConstants.STATUS_304, AccountsConstants.MESSAGE_304));
         }
     }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<ResponseDTO> deleteAccountDetails(@RequestParam String mobileNumber) {
+        boolean isDeleted = iaccountService.deleteAccount(mobileNumber);
+        if (isDeleted) {
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseDTO(AccountsConstants.STATUS_200, AccountsConstants.MESSAGE_200));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body(new ResponseDTO(AccountsConstants.STATUS_500, AccountsConstants.MESSAGE_500));
+        }
+    }
 }

@@ -6,7 +6,7 @@ public class AccountsConstants {
     }
 
     public static final String SAVINGS = "Savings";
-    public static final String ARDRESS = "Bijay Saroni,Dhaka -1213 .";
+    public static final String ADDRESS = "Bijay Saroni,Dhaka -1213 .";
     public static final String STATUS_201 = "201";
     public static final String MESSAGE_201 = "Account created successfully";
     public static final String STATUS_200 = "200";
