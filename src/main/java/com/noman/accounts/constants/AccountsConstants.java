@@ -2,9 +2,7 @@ package com.noman.accounts.constants;
 
 public class AccountsConstants {
     private AccountsConstants() {
-
     }
-
     public static final String SAVINGS = "Savings";
     public static final String ADDRESS = "Bijay Saroni,Dhaka -1213 .";
     public static final String STATUS_201 = "201";
