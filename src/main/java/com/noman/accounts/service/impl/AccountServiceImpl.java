@@ -9,6 +9,7 @@ import com.noman.accounts.exception.CustomerAlreadyExistsException;
 import com.noman.accounts.exception.ResourceNotFoundException;
 import com.noman.accounts.mapper.AccountsMapper;
 import com.noman.accounts.mapper.CustomerMapper;
+import com.noman.accounts.random.TenDigitNumberGenerator;
 import com.noman.accounts.repository.AccountsRepository;
 import com.noman.accounts.repository.CustomerRepository;
 import com.noman.accounts.service.IAccountService;
@@ -17,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Random;
 
 @Service
 @AllArgsConstructor
@@ -32,8 +32,6 @@ public class AccountServiceImpl implements IAccountService {
         if (customerRepository.findByMobileNumber(customer.getMobileNumber()).isPresent()) {
             throw new CustomerAlreadyExistsException("Customer already exists with the mobile number: " + customer.getMobileNumber());
         }
-        customer.setCreatedAt(LocalDateTime.now());
-        customer.setCreatedBy(customer.getName());
         Customer saveCustomer = customerRepository.save(customer);
         accountsRepository.save(createNewAccount(saveCustomer));
     }
@@ -41,11 +39,9 @@ public class AccountServiceImpl implements IAccountService {
     private Accounts createNewAccount(Customer customer) {
         Accounts newAccount = new Accounts();
         newAccount.setCustomerId(customer.getCustomerId());
-        newAccount.setAccountNumber(String.valueOf(100000L + new Random().nextInt(90000000)));
+        newAccount.setAccountNumber(TenDigitNumberGenerator.getTenDigitNumber());
         newAccount.setAccountType(AccountsConstants.SAVINGS);
         newAccount.setBranchAddress(AccountsConstants.ADDRESS);
-        newAccount.setCreatedAt(LocalDateTime.now());
-        newAccount.setCreatedBy(customer.getName());
         return newAccount;
     }
 
@@ -68,8 +64,6 @@ public class AccountServiceImpl implements IAccountService {
 
         // Map updated customer details
         CustomerMapper.mapToCustomer(customerDTO, customer);
-        customer.setUpdatedAt(LocalDateTime.now());
-        customer.setUpdatedBy(customer.getName()); // You might want to get this from a security context in a real app
         customerRepository.save(customer);
 
         // Update account details if provided
@@ -77,9 +71,8 @@ public class AccountServiceImpl implements IAccountService {
             Accounts account = accountsRepository.findByCustomerId(customer.getCustomerId())
                     .orElseThrow(() -> new ResourceNotFoundException("Account", "customerId", customer.getCustomerId().toString()));
             AccountsMapper.mapToAccounts(customerDTO.getAccountsDTO(), account);
-            account.setUpdatedAt(LocalDateTime.now());
-            account.setUpdatedBy(customer.getName());
             accountsRepository.save(account);
+            log.info(account.getCustomerId()+" "+account.getAccountNumber() );
             isUpdated = true;
         }
 
